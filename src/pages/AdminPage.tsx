@@ -24,7 +24,7 @@ export default function AdminPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground leading-none">VotePulse</h1>
-              <p className="text-xs text-muted-foreground">Admin Dashboard</p>
+              <p className="text-xs text-muted-foreground">Admin irányítópult</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -33,20 +33,20 @@ export default function AdminPage() {
                 onClick={() => setView('list')}
                 className={`px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors ${view === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" /> List
+                <LayoutGrid className="w-3.5 h-3.5" /> Lista
               </button>
               <button
                 onClick={() => setView('chart')}
                 className={`px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors ${view === 'chart' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
               >
-                <BarChart2 className="w-3.5 h-3.5" /> Charts
+                <BarChart2 className="w-3.5 h-3.5" /> Diagramok
               </button>
             </div>
             <button
               onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity glow-primary"
             >
-              <Plus className="w-4 h-4" /> New Poll
+              <Plus className="w-4 h-4" /> Új szavazás
             </button>
           </div>
         </div>
@@ -56,10 +56,10 @@ export default function AdminPage() {
         {polls.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <BarChart2 className="w-12 h-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">No polls yet</h2>
-            <p className="text-muted-foreground mb-6">Create your first poll to get started.</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Még nincs szavazás</h2>
+            <p className="text-muted-foreground mb-6">Hozd létre az első szavazásodat a kezdéshez.</p>
             <button onClick={() => setShowCreate(true)} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-opacity">
-              Create Poll
+              Szavazás létrehozása
             </button>
           </div>
         ) : view === 'list' ? (
@@ -72,9 +72,9 @@ export default function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${poll.status === 'active' ? 'status-active' : 'status-closed'}`}>
-                          {poll.status === 'active' ? '● Active' : '■ Closed'}
+                          {poll.status === 'active' ? '● Aktív' : '■ Lezárt'}
                         </span>
-                        <span className="text-xs text-muted-foreground">{total} votes · {poll.options.length} options</span>
+                        <span className="text-xs text-muted-foreground">{total} szavazat · {poll.options.length} lehetőség</span>
                       </div>
                       <h3 className="text-base font-semibold text-foreground">{poll.question}</h3>
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -92,14 +92,14 @@ export default function AdminPage() {
                       <button
                         onClick={() => { setSelectedPollId(poll.id); setView('chart'); }}
                         className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground hover:text-primary"
-                        title="View chart"
+                        title="Diagram megtekintése"
                       >
                         <BarChart2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(poll.id, poll.status)}
                         className="p-2 rounded-xl hover:bg-secondary transition-colors"
-                        title={poll.status === 'active' ? 'Close poll' : 'Reopen poll'}
+                        title={poll.status === 'active' ? 'Szavazás lezárása' : 'Szavazás újranyitása'}
                       >
                         {poll.status === 'active'
                           ? <XCircle className="w-4 h-4 text-destructive" />
@@ -109,7 +109,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => handleDelete(poll.id)}
                         className="p-2 rounded-xl hover:bg-destructive/20 transition-colors"
-                        title="Delete poll"
+                        title="Szavazás törlése"
                       >
                         <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                       </button>
@@ -124,7 +124,7 @@ export default function AdminPage() {
           <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
             {/* Poll selector sidebar */}
             <div className="no-print space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Select Poll</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Szavazás kiválasztása</p>
               {polls.map(poll => (
                 <button
                   key={poll.id}
@@ -139,7 +139,7 @@ export default function AdminPage() {
                     <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${poll.status === 'active' ? 'status-active' : 'status-closed'}`}>
                       {poll.status === 'active' ? '●' : '■'}
                     </span>
-                    <span className="text-xs text-muted-foreground">{getTotalVotes(poll)} votes</span>
+                    <span className="text-xs text-muted-foreground">{getTotalVotes(poll)} szavazat</span>
                   </div>
                   <p className="text-sm font-medium line-clamp-2">{poll.question}</p>
                 </button>
@@ -151,13 +151,13 @@ export default function AdminPage() {
               <div className="rounded-2xl border border-border card-gradient p-6 print-card">
                 <div className="flex items-center gap-2 mb-4 no-print">
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${selectedPoll.status === 'active' ? 'status-active' : 'status-closed'}`}>
-                    {selectedPoll.status === 'active' ? '● Active' : '■ Closed'}
+                    {selectedPoll.status === 'active' ? '● Aktív' : '■ Lezárt'}
                   </span>
                   <button
                     onClick={() => handleToggleStatus(selectedPoll.id, selectedPoll.status)}
                     className="ml-auto text-xs px-3 py-1 rounded-lg border border-border hover:bg-secondary transition-colors text-muted-foreground"
                   >
-                    {selectedPoll.status === 'active' ? 'Close poll' : 'Reopen poll'}
+                    {selectedPoll.status === 'active' ? 'Szavazás lezárása' : 'Szavazás újranyitása'}
                   </button>
                 </div>
                 <PollChart poll={selectedPoll} showPrint />

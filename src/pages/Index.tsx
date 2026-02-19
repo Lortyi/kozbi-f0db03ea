@@ -23,13 +23,13 @@ const Index = () => {
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-bold text-foreground mb-4 leading-tight">
-            Real-time voting
+            Valós idejű szavazás
             <br />
-            <span className="text-primary glow-text">across all devices</span>
+            <span className="text-primary glow-text">minden eszközön</span>
           </h1>
 
           <p className="text-lg text-muted-foreground mb-10 max-w-lg mx-auto">
-            Create polls, collect votes from any device, and visualize results instantly with live charts.
+            Hozz létre szavazásokat, gyűjts szavazatokat bármilyen eszközről, és vizualizáld az eredményeket azonnal élő diagramokkal.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -38,7 +38,7 @@ const Index = () => {
               className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-all glow-primary"
             >
               <Smartphone className="w-5 h-5" />
-              Open Voter App
+              Szavazóalkalmazás megnyitása
               <ChevronRight className="w-4 h-4" />
             </Link>
             <Link
@@ -46,7 +46,7 @@ const Index = () => {
               className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl border border-border bg-secondary text-secondary-foreground font-bold text-lg hover:bg-secondary/80 transition-all"
             >
               <Monitor className="w-5 h-5" />
-              Admin Dashboard
+              Admin irányítópult
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -57,9 +57,9 @@ const Index = () => {
       <div className="border-t border-border bg-card">
         <div className="max-w-4xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { icon: '🛡️', title: 'Anti-double vote', desc: 'Each device can only vote once per poll using a unique device fingerprint.' },
-            { icon: '📊', title: 'Live charts', desc: 'Bar charts update in real-time. Print results directly from the dashboard.' },
-            { icon: '🎛️', title: 'Session control', desc: 'Instantly open or close any poll. Full admin control from one dashboard.' },
+            { icon: '🛡️', title: 'Dupla szavazás elleni védelem', desc: 'Minden eszköz csak egyszer szavazhat szavarásonként, egyedi eszközujjlenyomat alapján.' },
+            { icon: '📊', title: 'Élő diagramok', desc: 'Az oszlopdiagramok valós időben frissülnek. Az eredmények közvetlenül az irányítópultról nyomtathatók.' },
+            { icon: '🎛️', title: 'Munkamenet-kezelés', desc: 'Bármely szavazást azonnal megnyithatod vagy lezárhatod. Teljes admin irányítás egy helyen.' },
           ].map(f => (
             <div key={f.title} className="flex gap-3">
               <span className="text-2xl flex-shrink-0">{f.icon}</span>
