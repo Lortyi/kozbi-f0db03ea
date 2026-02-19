@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="glass rounded-lg px-4 py-2 text-sm">
         <p className="font-semibold text-foreground">{d.option}</p>
-        <p className="text-primary">{d.votes} votes ({d.percentage}%)</p>
+        <p className="text-primary">{d.votes} szavazat ({d.percentage}%)</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function PollChart({ poll, showPrint = false }: PollChartProps) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="print-title font-semibold text-foreground text-base leading-snug">{poll.question}</h3>
-          <p className="text-muted-foreground text-sm mt-1">{total} total votes</p>
+          <p className="text-muted-foreground text-sm mt-1">{total} összes szavazat</p>
         </div>
         {showPrint && (
           <button
@@ -50,7 +50,7 @@ export function PollChart({ poll, showPrint = false }: PollChartProps) {
             className="no-print ml-4 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Printer className="w-4 h-4" />
-            Print
+            Nyomtatás
           </button>
         )}
       </div>

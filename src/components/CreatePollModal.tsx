@@ -26,9 +26,9 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   };
 
   const handleSubmit = () => {
-    if (!question.trim()) { setError('Please enter a question.'); return; }
+    if (!question.trim()) { setError('Kérjük, adj meg egy kérdést.'); return; }
     const validOptions = options.map(o => o.trim()).filter(Boolean);
-    if (validOptions.length < 2) { setError('Please add at least 2 options.'); return; }
+    if (validOptions.length < 2) { setError('Kérjük, adj meg legalább 2 lehetőséget.'); return; }
     onCreate(question.trim(), validOptions);
     onClose();
   };
@@ -38,7 +38,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg rounded-2xl border border-border card-gradient p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">New Poll</h2>
+          <h2 className="text-xl font-bold text-foreground">Új szavazás</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary transition-colors">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -46,25 +46,25 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
 
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Question</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Kérdés</label>
             <input
               value={question}
               onChange={e => setQuestion(e.target.value)}
-              placeholder="What do you want to ask?"
+              placeholder="Mit szeretnél megkérdezni?"
               className="w-full rounded-xl bg-muted border border-border px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               maxLength={200}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Options</label>
+            <label className="block text-sm font-medium text-foreground mb-2">Lehetőségek</label>
             <div className="space-y-2">
               {options.map((opt, i) => (
                 <div key={i} className="flex gap-2">
                   <input
                     value={opt}
                     onChange={e => updateOption(i, e.target.value)}
-                    placeholder={`Option ${i + 1}`}
+                    placeholder={`${i + 1}. lehetőség`}
                     className="flex-1 rounded-xl bg-muted border border-border px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                     maxLength={100}
                   />
@@ -78,7 +78,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
             </div>
             {options.length < 6 && (
               <button onClick={addOption} className="mt-2 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors">
-                <Plus className="w-4 h-4" /> Add option
+                <Plus className="w-4 h-4" /> Lehetőség hozzáadása
               </button>
             )}
           </div>
@@ -89,7 +89,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
             onClick={handleSubmit}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity glow-primary"
           >
-            Create Poll <ChevronRight className="w-4 h-4" />
+            Szavazás létrehozása <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
