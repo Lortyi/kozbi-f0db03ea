@@ -38,9 +38,6 @@ export default function VoterPage() {
               <p className="text-xs text-muted-foreground">Szavazófülke</p>
             </div>
           </div>
-          <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-            Admin →
-          </Link>
         </div>
       </header>
 
@@ -123,23 +120,6 @@ export default function VoterPage() {
               </div>
             )}
 
-            {closedPolls.length > 0 && (
-              <div className="mt-6">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Lezárt szavazások</p>
-                <div className="space-y-3">
-                  {closedPolls.map(poll => (
-                    <div key={poll.id} className="rounded-2xl border border-border card-gradient px-5 py-4 opacity-70">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-xs font-semibold status-closed px-2 py-0.5 rounded-full">■ Lezárt</span>
-                        <span className="text-xs text-muted-foreground">{getTotalVotes(poll)} összes szavazat</span>
-                      </div>
-                      <p className="text-sm font-medium text-foreground">{poll.question}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         )}
 
