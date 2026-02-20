@@ -23,7 +23,7 @@ export default function AdminPage() {
               <Radio className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground leading-none">VotePulse</h1>
+              <h1 className="text-lg font-bold text-foreground leading-none">AKB Szavazó</h1>
               <p className="text-xs text-muted-foreground">Admin irányítópult</p>
             </div>
           </div>
