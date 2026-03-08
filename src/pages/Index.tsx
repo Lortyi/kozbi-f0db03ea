@@ -15,21 +15,13 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
 
         <div className="relative z-10 max-w-2xl mx-auto">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link
               to="/vote"
               className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-all glow-primary"
             >
               <Smartphone className="w-5 h-5" />
               Szavazóalkalmazás megnyitása
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/admin"
-              className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl border border-border bg-secondary text-secondary-foreground font-bold text-lg hover:bg-secondary/80 transition-all"
-            >
-              <Monitor className="w-5 h-5" />
-              Admin irányítópult
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
