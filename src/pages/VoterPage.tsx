@@ -17,10 +17,10 @@ export default function VoterPage() {
     return poll?.deviceVotes.includes(deviceId) ?? false;
   };
 
-  const submitVote = (pollId: string) => {
+  const submitVote = async (pollId: string) => {
     const optionIndex = selectedOptions[pollId];
     if (optionIndex === undefined) return;
-    const result = handleVote(pollId, optionIndex);
+    const result = await handleVote(pollId, optionIndex);
     setVoteResults(prev => ({ ...prev, [pollId]: result }));
   };
 

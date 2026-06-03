@@ -1,4 +1,4 @@
-// Voting data store using localStorage for persistence
+// Voting data store - PHP/MySQL API backend (Apache)
 export interface Poll {
   id: string;
   question: string;
@@ -9,7 +9,10 @@ export interface Poll {
   createdAt: number;
 }
 
-const POLLS_KEY = 'votepulse_polls';
+// API alapcím. Apache alatt az /api/index.php szolgálja ki.
+// Felülírható .env-ben: VITE_API_BASE=https://domain.hu/api/index.php
+const API_BASE = (import.meta.env.VITE_API_BASE as string) || '/api/index.php';
+
 const DEVICE_KEY = 'votepulse_device_id';
 
 // Get or create a unique device ID
@@ -22,90 +25,44 @@ export function getDeviceId(): string {
   return id;
 }
 
-export function getPolls(): Poll[] {
+async function api<T>(action: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}?action=${action}`, {
+    method: body ? 'POST' : 'GET',
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function getPolls(): Promise<Poll[]> {
   try {
-    const raw = localStorage.getItem(POLLS_KEY);
-    return raw ? JSON.parse(raw) : getDefaultPolls();
+    return await api<Poll[]>('list');
   } catch {
-    return getDefaultPolls();
+    return [];
   }
 }
 
-function getDefaultPolls(): Poll[] {
-  const defaults: Poll[] = [
-    {
-      id: 'poll_demo_1',
-      question: 'What is your preferred remote work arrangement?',
-      options: ['Full remote', 'Hybrid (3 days office)', 'Hybrid (2 days office)', 'Full office'],
-      status: 'active',
-      votes: { '0': 12, '1': 28, '2': 19, '3': 7 },
-      deviceVotes: [],
-      createdAt: Date.now() - 86400000,
-    },
-    {
-      id: 'poll_demo_2',
-      question: 'Which project should we prioritize next quarter?',
-      options: ['New mobile app', 'Platform redesign', 'API improvements', 'Analytics dashboard'],
-      status: 'closed',
-      votes: { '0': 34, '1': 22, '2': 41, '3': 18 },
-      deviceVotes: [],
-      createdAt: Date.now() - 172800000,
-    },
-  ];
-  savePolls(defaults);
-  return defaults;
+export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
+  return api<Poll[]>('create', { question, options });
 }
 
-export function savePolls(polls: Poll[]): void {
-  localStorage.setItem(POLLS_KEY, JSON.stringify(polls));
+export async function updatePollStatus(id: string, status: 'active' | 'closed'): Promise<Poll[]> {
+  return api<Poll[]>('status', { id, status });
 }
 
-export function getPoll(id: string): Poll | undefined {
-  return getPolls().find((p) => p.id === id);
+export async function deletePoll(id: string): Promise<Poll[]> {
+  return api<Poll[]>('delete', { id });
 }
 
-export function createPoll(question: string, options: string[]): Poll {
-  const poll: Poll = {
-    id: `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-    question,
-    options,
-    status: 'active',
-    votes: {},
-    deviceVotes: [],
-    createdAt: Date.now(),
-  };
-  const polls = getPolls();
-  polls.unshift(poll);
-  savePolls(polls);
-  return poll;
-}
+export type VoteResult = 'success' | 'already_voted' | 'closed' | 'not_found';
 
-export function updatePollStatus(id: string, status: 'active' | 'closed'): void {
-  const polls = getPolls();
-  const idx = polls.findIndex((p) => p.id === id);
-  if (idx !== -1) {
-    polls[idx].status = status;
-    savePolls(polls);
-  }
-}
-
-export function deletePoll(id: string): void {
-  const polls = getPolls().filter((p) => p.id !== id);
-  savePolls(polls);
-}
-
-export function castVote(pollId: string, optionIndex: number, deviceId: string): 'success' | 'already_voted' | 'closed' | 'not_found' {
-  const polls = getPolls();
-  const idx = polls.findIndex((p) => p.id === pollId);
-  if (idx === -1) return 'not_found';
-  const poll = polls[idx];
-  if (poll.status === 'closed') return 'closed';
-  if (poll.deviceVotes.includes(deviceId)) return 'already_voted';
-
-  poll.votes[optionIndex.toString()] = (poll.votes[optionIndex.toString()] || 0) + 1;
-  poll.deviceVotes.push(deviceId);
-  savePolls(polls);
-  return 'success';
+export async function castVote(
+  pollId: string,
+  optionIndex: number,
+  deviceId: string
+): Promise<{ result: VoteResult; polls?: Poll[] }> {
+  return api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
 }
 
 export function getTotalVotes(poll: Poll): number {
