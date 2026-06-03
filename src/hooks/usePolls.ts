@@ -1,42 +1,43 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getPolls, savePolls, createPoll, updatePollStatus, deletePoll, castVote, getDeviceId, type Poll } from '@/lib/votingStore';
+import { getPolls, createPoll, updatePollStatus, deletePoll, castVote, getDeviceId, type Poll, type VoteResult } from '@/lib/votingStore';
 
 export function usePolls() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [deviceId] = useState<string>(getDeviceId());
 
-  const refresh = useCallback(() => {
-    setPolls(getPolls());
+  const refresh = useCallback(async () => {
+    const data = await getPolls();
+    setPolls(data);
   }, []);
 
   useEffect(() => {
     refresh();
-    // Poll for changes (simulating real-time sync)
+    // Szerver lekérdezése időközönként (valós idejű szinkron)
     const interval = setInterval(refresh, 2000);
     return () => clearInterval(interval);
   }, [refresh]);
 
-  const handleCreate = useCallback((question: string, options: string[]) => {
-    const poll = createPoll(question, options);
-    setPolls(getPolls());
-    return poll;
+  const handleCreate = useCallback(async (question: string, options: string[]) => {
+    const data = await createPoll(question, options);
+    setPolls(data);
   }, []);
 
-  const handleToggleStatus = useCallback((id: string, current: 'active' | 'closed') => {
-    updatePollStatus(id, current === 'active' ? 'closed' : 'active');
-    setPolls(getPolls());
+  const handleToggleStatus = useCallback(async (id: string, current: 'active' | 'closed') => {
+    const data = await updatePollStatus(id, current === 'active' ? 'closed' : 'active');
+    setPolls(data);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    deletePoll(id);
-    setPolls(getPolls());
+  const handleDelete = useCallback(async (id: string) => {
+    const data = await deletePoll(id);
+    setPolls(data);
   }, []);
 
-  const handleVote = useCallback((pollId: string, optionIndex: number) => {
-    const result = castVote(pollId, optionIndex, deviceId);
-    setPolls(getPolls());
-    return result;
-  }, [deviceId]);
+  const handleVote = useCallback(async (pollId: string, optionIndex: number): Promise<VoteResult> => {
+    const res = await castVote(pollId, optionIndex, deviceId);
+    if (res.polls) setPolls(res.polls);
+    else refresh();
+    return res.result;
+  }, [deviceId, refresh]);
 
   return { polls, deviceId, refresh, handleCreate, handleToggleStatus, handleDelete, handleVote };
 }
