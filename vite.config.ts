@@ -5,6 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Production build az /kozbi/ almappába kerül az Apache szerveren.
+  // Fejlesztésben (preview) maradjon a gyökér, hogy működjön a preview.
+  base: mode === "development" ? "/" : "/kozbi/",
   server: {
     host: "::",
     port: 8080,
