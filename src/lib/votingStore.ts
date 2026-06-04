@@ -1,4 +1,4 @@
-// Voting data store - PHP/MySQL API backend (Apache)
+// Voting data store - PHP/MySQL API backend (Apache) with localStorage fallback (preview)
 export interface Poll {
   id: string;
   question: string;
@@ -14,6 +14,10 @@ export interface Poll {
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || '/api/index.php';
 
 const DEVICE_KEY = 'votepulse_device_id';
+const POLLS_KEY = 'akb_polls_fallback';
+
+// Ha az API nem elérhető (pl. Lovable preview, nincs PHP), localStorage-ra váltunk.
+let useFallback = false;
 
 // Get or create a unique device ID
 export function getDeviceId(): string {
@@ -25,6 +29,20 @@ export function getDeviceId(): string {
   return id;
 }
 
+// ---- localStorage fallback implementáció ----
+function lsRead(): Poll[] {
+  try {
+    return JSON.parse(localStorage.getItem(POLLS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function lsWrite(polls: Poll[]): Poll[] {
+  localStorage.setItem(POLLS_KEY, JSON.stringify(polls));
+  return polls;
+}
+
 async function api<T>(action: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}?action=${action}`, {
     method: body ? 'POST' : 'GET',
@@ -32,27 +50,67 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
+  const text = await res.text();
+  // Ha nem JSON érkezik (pl. nyers PHP forrás preview-ban), hiba -> fallback
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error('Invalid JSON (no PHP backend)');
+  }
 }
 
 export async function getPolls(): Promise<Poll[]> {
+  if (useFallback) return lsRead();
   try {
     return await api<Poll[]>('list');
   } catch {
-    return [];
+    useFallback = true;
+    return lsRead();
   }
 }
 
 export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
-  return api<Poll[]>('create', { question, options });
+  if (!useFallback) {
+    try {
+      return await api<Poll[]>('create', { question, options });
+    } catch {
+      useFallback = true;
+    }
+  }
+  const polls = lsRead();
+  const newPoll: Poll = {
+    id: `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    question,
+    options: options.filter(Boolean),
+    status: 'active',
+    votes: {},
+    deviceVotes: [],
+    createdAt: Date.now(),
+  };
+  return lsWrite([newPoll, ...polls]);
 }
 
 export async function updatePollStatus(id: string, status: 'active' | 'closed'): Promise<Poll[]> {
-  return api<Poll[]>('status', { id, status });
+  if (!useFallback) {
+    try {
+      return await api<Poll[]>('status', { id, status });
+    } catch {
+      useFallback = true;
+    }
+  }
+  const polls = lsRead().map(p => (p.id === id ? { ...p, status } : p));
+  return lsWrite(polls);
 }
 
 export async function deletePoll(id: string): Promise<Poll[]> {
-  return api<Poll[]>('delete', { id });
+  if (!useFallback) {
+    try {
+      return await api<Poll[]>('delete', { id });
+    } catch {
+      useFallback = true;
+    }
+  }
+  return lsWrite(lsRead().filter(p => p.id !== id));
 }
 
 export type VoteResult = 'success' | 'already_voted' | 'closed' | 'not_found';
@@ -62,7 +120,22 @@ export async function castVote(
   optionIndex: number,
   deviceId: string
 ): Promise<{ result: VoteResult; polls?: Poll[] }> {
-  return api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+  if (!useFallback) {
+    try {
+      return await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+    } catch {
+      useFallback = true;
+    }
+  }
+  const polls = lsRead();
+  const poll = polls.find(p => p.id === pollId);
+  if (!poll) return { result: 'not_found' };
+  if (poll.status === 'closed') return { result: 'closed' };
+  if (poll.deviceVotes.includes(deviceId)) return { result: 'already_voted' };
+  const key = optionIndex.toString();
+  poll.votes[key] = (poll.votes[key] || 0) + 1;
+  poll.deviceVotes.push(deviceId);
+  return { result: 'success', polls: lsWrite(polls) };
 }
 
 export function getTotalVotes(poll: Poll): number {
