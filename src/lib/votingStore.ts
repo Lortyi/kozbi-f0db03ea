@@ -9,9 +9,9 @@ export interface Poll {
   createdAt: number;
 }
 
-// API alapcím. Apache alatt az /api/index.php szolgálja ki.
-// Felülírható .env-ben: VITE_API_BASE=https://domain.hu/api/index.php
-const API_BASE = (import.meta.env.VITE_API_BASE as string) || '/api/index.php';
+// API alapcím. Apache alatt a /kozbi/api/index.php szolgálja ki.
+// Felülírható .env-ben: VITE_API_BASE=https://domain.hu/kozbi/api/index.php
+const API_BASE = (import.meta.env.VITE_API_BASE as string) || '/kozbi/api/index.php';
 
 const DEVICE_KEY = 'votepulse_device_id';
 const POLLS_KEY = 'akb_polls_fallback';
