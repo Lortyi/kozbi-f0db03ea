@@ -76,6 +76,7 @@ export async function getPolls(): Promise<Poll[]> {
     return await api<Poll[]>('list');
   } catch {
     useFallback = true;
+    console.warn('[AKB] Az API nem elérhető – localStorage tartalékra váltás (a szavazások csak ezen az eszközön látszanak).');
     return lsRead();
   }
 }
