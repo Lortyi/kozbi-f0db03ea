@@ -44,17 +44,28 @@ function lsWrite(polls: Poll[]): Poll[] {
 }
 
 async function api<T>(action: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}?action=${action}`, {
-    method: body ? 'POST' : 'GET',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const url = `${API_BASE}?action=${action}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: body ? 'POST' : 'GET',
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) {
+    console.error(`[AKB API] Nem sikerült elérni: ${url}`, e);
+    throw e;
+  }
   const text = await res.text();
-  // Ha nem JSON érkezik (pl. nyers PHP forrás preview-ban), hiba -> fallback
+  if (!res.ok) {
+    console.error(`[AKB API] HTTP ${res.status} (${url}). Válasz:`, text.slice(0, 500));
+    throw new Error(`API error: ${res.status}`);
+  }
+  // Ha nem JSON érkezik (pl. nyers PHP forrás, vagy HTML hibaoldal) -> fallback
   try {
     return JSON.parse(text) as T;
   } catch {
+    console.error(`[AKB API] Nem JSON válasz (${url}). Ezt kaptuk:`, text.slice(0, 500));
     throw new Error('Invalid JSON (no PHP backend)');
   }
 }
