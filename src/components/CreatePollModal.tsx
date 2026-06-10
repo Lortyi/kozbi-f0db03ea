@@ -96,9 +96,10 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
 
           <button
             onClick={handleSubmit}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity glow-primary"
+            disabled={submitting}
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity glow-primary disabled:opacity-60"
           >
-            Szavazás létrehozása <ChevronRight className="w-4 h-4" />
+            {submitting ? 'Létrehozás…' : 'Szavazás létrehozása'} <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
