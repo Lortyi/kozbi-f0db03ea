@@ -10,6 +10,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const addOption = () => {
     if (options.length < 6) setOptions([...options, '']);
@@ -25,12 +26,20 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
     setOptions(updated);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!question.trim()) { setError('Kérjük, adj meg egy kérdést.'); return; }
     const validOptions = options.map(o => o.trim()).filter(Boolean);
     if (validOptions.length < 2) { setError('Kérjük, adj meg legalább 2 lehetőséget.'); return; }
-    onCreate(question.trim(), validOptions);
-    onClose();
+    setSubmitting(true);
+    setError('');
+    try {
+      await onCreate(question.trim(), validOptions);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'A létrehozás sikertelen – nincs kapcsolat a szerverrel.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
