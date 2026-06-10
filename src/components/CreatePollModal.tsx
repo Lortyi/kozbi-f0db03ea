@@ -3,7 +3,7 @@ import { Plus, X, ChevronRight } from 'lucide-react';
 
 interface CreatePollModalProps {
   onClose: () => void;
-  onCreate: (question: string, options: string[]) => void;
+  onCreate: (question: string, options: string[]) => Promise<void> | void;
 }
 
 export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
