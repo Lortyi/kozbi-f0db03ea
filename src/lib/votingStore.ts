@@ -70,10 +70,31 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
   }
 }
 
+// Biztonságos normalizálás: a szerverről érkező adat hibás/hiányos mezőit kijavítja,
+// így a felület nem omlik össze (fekete képernyő).
+function normalizePoll(p: unknown): Poll {
+  const o = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+  return {
+    id: String(o.id ?? `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`),
+    question: typeof o.question === 'string' ? o.question : '',
+    options: Array.isArray(o.options) ? o.options.map(String) : [],
+    status: o.status === 'closed' ? 'closed' : 'active',
+    votes: o.votes && typeof o.votes === 'object' && !Array.isArray(o.votes)
+      ? (o.votes as Record<string, number>)
+      : {},
+    deviceVotes: Array.isArray(o.deviceVotes) ? o.deviceVotes.map(String) : [],
+    createdAt: Number(o.createdAt) || 0,
+  };
+}
+
+function normalizePolls(data: unknown): Poll[] {
+  return Array.isArray(data) ? data.map(normalizePoll) : [];
+}
+
 export async function getPolls(): Promise<Poll[]> {
   if (useFallback) return lsRead();
   try {
-    return await api<Poll[]>('list');
+    return normalizePolls(await api<Poll[]>('list'));
   } catch {
     useFallback = true;
     console.warn('[AKB] Az API nem elérhető – localStorage tartalékra váltás (a szavazások csak ezen az eszközön látszanak).');
