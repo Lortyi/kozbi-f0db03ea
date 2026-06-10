@@ -16,6 +16,7 @@ export default function AdminPage() {
   const selectedPoll = polls.find(p => p.id === selectedPollId) || polls[0];
 
   return (
+    <ErrorBoundary>
     <PinGate>
     <div className="min-h-screen bg-background">
       {/* Header */}
