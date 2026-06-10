@@ -4,6 +4,7 @@ import { getVoteData, getTotalVotes } from '@/lib/votingStore';
 import { PollChart } from '@/components/PollChart';
 import { CreatePollModal } from '@/components/CreatePollModal';
 import { PinGate } from '@/components/PinGate';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Plus, BarChart2, CheckCircle2, XCircle, Trash2, Radio, LayoutGrid } from 'lucide-react';
 
 export default function AdminPage() {
