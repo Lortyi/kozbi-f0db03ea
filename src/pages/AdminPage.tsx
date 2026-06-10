@@ -8,7 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Plus, BarChart2, CheckCircle2, XCircle, Trash2, Radio, LayoutGrid } from 'lucide-react';
 
 export default function AdminPage() {
-  const { polls, handleCreate, handleToggleStatus, handleDelete } = usePolls();
+  const { polls, error, handleCreate, handleToggleStatus, handleDelete } = usePolls();
   const [showCreate, setShowCreate] = useState(false);
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'chart'>('list');
