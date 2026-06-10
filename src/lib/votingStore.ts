@@ -105,7 +105,7 @@ export async function getPolls(): Promise<Poll[]> {
 export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('create', { question, options });
+      return normalizePolls(await api<Poll[]>('create', { question, options }));
     } catch {
       useFallback = true;
     }
@@ -126,7 +126,7 @@ export async function createPoll(question: string, options: string[]): Promise<P
 export async function updatePollStatus(id: string, status: 'active' | 'closed'): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('status', { id, status });
+      return normalizePolls(await api<Poll[]>('status', { id, status }));
     } catch {
       useFallback = true;
     }
@@ -138,7 +138,7 @@ export async function updatePollStatus(id: string, status: 'active' | 'closed'):
 export async function deletePoll(id: string): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('delete', { id });
+      return normalizePolls(await api<Poll[]>('delete', { id }));
     } catch {
       useFallback = true;
     }
