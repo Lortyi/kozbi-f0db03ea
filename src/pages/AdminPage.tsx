@@ -179,5 +179,6 @@ export default function AdminPage() {
       )}
     </div>
     </PinGate>
+    </ErrorBoundary>
   );
 }
