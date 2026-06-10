@@ -70,10 +70,31 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
   }
 }
 
+// Biztonságos normalizálás: a szerverről érkező adat hibás/hiányos mezőit kijavítja,
+// így a felület nem omlik össze (fekete képernyő).
+function normalizePoll(p: unknown): Poll {
+  const o = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+  return {
+    id: String(o.id ?? `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`),
+    question: typeof o.question === 'string' ? o.question : '',
+    options: Array.isArray(o.options) ? o.options.map(String) : [],
+    status: o.status === 'closed' ? 'closed' : 'active',
+    votes: o.votes && typeof o.votes === 'object' && !Array.isArray(o.votes)
+      ? (o.votes as Record<string, number>)
+      : {},
+    deviceVotes: Array.isArray(o.deviceVotes) ? o.deviceVotes.map(String) : [],
+    createdAt: Number(o.createdAt) || 0,
+  };
+}
+
+function normalizePolls(data: unknown): Poll[] {
+  return Array.isArray(data) ? data.map(normalizePoll) : [];
+}
+
 export async function getPolls(): Promise<Poll[]> {
   if (useFallback) return lsRead();
   try {
-    return await api<Poll[]>('list');
+    return normalizePolls(await api<Poll[]>('list'));
   } catch {
     useFallback = true;
     console.warn('[AKB] Az API nem elérhető – localStorage tartalékra váltás (a szavazások csak ezen az eszközön látszanak).');
@@ -84,7 +105,7 @@ export async function getPolls(): Promise<Poll[]> {
 export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('create', { question, options });
+      return normalizePolls(await api<Poll[]>('create', { question, options }));
     } catch {
       useFallback = true;
     }
@@ -105,7 +126,7 @@ export async function createPoll(question: string, options: string[]): Promise<P
 export async function updatePollStatus(id: string, status: 'active' | 'closed'): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('status', { id, status });
+      return normalizePolls(await api<Poll[]>('status', { id, status }));
     } catch {
       useFallback = true;
     }
@@ -117,7 +138,7 @@ export async function updatePollStatus(id: string, status: 'active' | 'closed'):
 export async function deletePoll(id: string): Promise<Poll[]> {
   if (!useFallback) {
     try {
-      return await api<Poll[]>('delete', { id });
+      return normalizePolls(await api<Poll[]>('delete', { id }));
     } catch {
       useFallback = true;
     }
@@ -134,7 +155,8 @@ export async function castVote(
 ): Promise<{ result: VoteResult; polls?: Poll[] }> {
   if (!useFallback) {
     try {
-      return await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+      const res = await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+      return { result: res.result, polls: res.polls ? normalizePolls(res.polls) : undefined };
     } catch {
       useFallback = true;
     }
