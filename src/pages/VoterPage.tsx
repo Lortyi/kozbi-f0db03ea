@@ -20,8 +20,12 @@ export default function VoterPage() {
   const submitVote = async (pollId: string) => {
     const optionIndex = selectedOptions[pollId];
     if (optionIndex === undefined) return;
-    const result = await handleVote(pollId, optionIndex);
-    setVoteResults(prev => ({ ...prev, [pollId]: result }));
+    try {
+      const result = await handleVote(pollId, optionIndex);
+      setVoteResults(prev => ({ ...prev, [pollId]: result }));
+    } catch {
+      setVoteResults(prev => ({ ...prev, [pollId]: 'error' }));
+    }
   };
 
   return (

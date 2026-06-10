@@ -8,7 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Plus, BarChart2, CheckCircle2, XCircle, Trash2, Radio, LayoutGrid } from 'lucide-react';
 
 export default function AdminPage() {
-  const { polls, handleCreate, handleToggleStatus, handleDelete } = usePolls();
+  const { polls, error, handleCreate, handleToggleStatus, handleDelete } = usePolls();
   const [showCreate, setShowCreate] = useState(false);
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'chart'>('list');
@@ -57,6 +57,11 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            Nincs kapcsolat a szerver adatbázisával: {error}. A szavazások csak a szerverről működnek – helyileg nem jönnek létre.
+          </div>
+        )}
         {polls.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <BarChart2 className="w-12 h-12 text-muted-foreground mb-4" />

@@ -1,4 +1,6 @@
-// Voting data store - PHP/MySQL API backend (Apache) with localStorage fallback (preview)
+// Voting data store - KIZÁRÓLAG PHP/MySQL API backend (Apache).
+// Nincs localStorage tartalék: ha a szerver nem elérhető, hibát dobunk,
+// és helyileg NEM jön létre szavazás.
 export interface Poll {
   id: string;
   question: string;
@@ -14,10 +16,6 @@ export interface Poll {
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || '/kozbi/api/index.php';
 
 const DEVICE_KEY = 'votepulse_device_id';
-const POLLS_KEY = 'akb_polls_fallback';
-
-// Ha az API nem elérhető (pl. Lovable preview, nincs PHP), localStorage-ra váltunk.
-let useFallback = false;
 
 // Get or create a unique device ID
 export function getDeviceId(): string {
@@ -27,20 +25,6 @@ export function getDeviceId(): string {
     localStorage.setItem(DEVICE_KEY, id);
   }
   return id;
-}
-
-// ---- localStorage fallback implementáció ----
-function lsRead(): Poll[] {
-  try {
-    return JSON.parse(localStorage.getItem(POLLS_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function lsWrite(polls: Poll[]): Poll[] {
-  localStorage.setItem(POLLS_KEY, JSON.stringify(polls));
-  return polls;
 }
 
 async function api<T>(action: string, body?: unknown): Promise<T> {
@@ -54,19 +38,18 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
     });
   } catch (e) {
     console.error(`[AKB API] Nem sikerült elérni: ${url}`, e);
-    throw e;
+    throw new Error('Nincs kapcsolat a szerverrel');
   }
   const text = await res.text();
   if (!res.ok) {
     console.error(`[AKB API] HTTP ${res.status} (${url}). Válasz:`, text.slice(0, 500));
-    throw new Error(`API error: ${res.status}`);
+    throw new Error(`Szerver hiba (${res.status})`);
   }
-  // Ha nem JSON érkezik (pl. nyers PHP forrás, vagy HTML hibaoldal) -> fallback
   try {
     return JSON.parse(text) as T;
   } catch {
     console.error(`[AKB API] Nem JSON válasz (${url}). Ezt kaptuk:`, text.slice(0, 500));
-    throw new Error('Invalid JSON (no PHP backend)');
+    throw new Error('Érvénytelen szerverválasz');
   }
 }
 
@@ -92,58 +75,19 @@ function normalizePolls(data: unknown): Poll[] {
 }
 
 export async function getPolls(): Promise<Poll[]> {
-  if (useFallback) return lsRead();
-  try {
-    return normalizePolls(await api<Poll[]>('list'));
-  } catch {
-    useFallback = true;
-    console.warn('[AKB] Az API nem elérhető – localStorage tartalékra váltás (a szavazások csak ezen az eszközön látszanak).');
-    return lsRead();
-  }
+  return normalizePolls(await api<Poll[]>('list'));
 }
 
 export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
-  if (!useFallback) {
-    try {
-      return normalizePolls(await api<Poll[]>('create', { question, options }));
-    } catch {
-      useFallback = true;
-    }
-  }
-  const polls = lsRead();
-  const newPoll: Poll = {
-    id: `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-    question,
-    options: options.filter(Boolean),
-    status: 'active',
-    votes: {},
-    deviceVotes: [],
-    createdAt: Date.now(),
-  };
-  return lsWrite([newPoll, ...polls]);
+  return normalizePolls(await api<Poll[]>('create', { question, options }));
 }
 
 export async function updatePollStatus(id: string, status: 'active' | 'closed'): Promise<Poll[]> {
-  if (!useFallback) {
-    try {
-      return normalizePolls(await api<Poll[]>('status', { id, status }));
-    } catch {
-      useFallback = true;
-    }
-  }
-  const polls = lsRead().map(p => (p.id === id ? { ...p, status } : p));
-  return lsWrite(polls);
+  return normalizePolls(await api<Poll[]>('status', { id, status }));
 }
 
 export async function deletePoll(id: string): Promise<Poll[]> {
-  if (!useFallback) {
-    try {
-      return normalizePolls(await api<Poll[]>('delete', { id }));
-    } catch {
-      useFallback = true;
-    }
-  }
-  return lsWrite(lsRead().filter(p => p.id !== id));
+  return normalizePolls(await api<Poll[]>('delete', { id }));
 }
 
 export type VoteResult = 'success' | 'already_voted' | 'closed' | 'not_found';
@@ -153,23 +97,8 @@ export async function castVote(
   optionIndex: number,
   deviceId: string
 ): Promise<{ result: VoteResult; polls?: Poll[] }> {
-  if (!useFallback) {
-    try {
-      const res = await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
-      return { result: res.result, polls: res.polls ? normalizePolls(res.polls) : undefined };
-    } catch {
-      useFallback = true;
-    }
-  }
-  const polls = lsRead();
-  const poll = polls.find(p => p.id === pollId);
-  if (!poll) return { result: 'not_found' };
-  if (poll.status === 'closed') return { result: 'closed' };
-  if (poll.deviceVotes.includes(deviceId)) return { result: 'already_voted' };
-  const key = optionIndex.toString();
-  poll.votes[key] = (poll.votes[key] || 0) + 1;
-  poll.deviceVotes.push(deviceId);
-  return { result: 'success', polls: lsWrite(polls) };
+  const res = await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+  return { result: res.result, polls: res.polls ? normalizePolls(res.polls) : undefined };
 }
 
 export function getTotalVotes(poll: Poll): number {
