@@ -155,7 +155,8 @@ export async function castVote(
 ): Promise<{ result: VoteResult; polls?: Poll[] }> {
   if (!useFallback) {
     try {
-      return await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+      const res = await api<{ result: VoteResult; polls?: Poll[] }>('vote', { pollId, optionIndex, deviceId });
+      return { result: res.result, polls: res.polls ? normalizePolls(res.polls) : undefined };
     } catch {
       useFallback = true;
     }
