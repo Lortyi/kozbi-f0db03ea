@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { usePolls } from '@/hooks/usePolls';
-import { getTotalVotes } from '@/lib/votingStore';
+import { getTotalVotes, getLastRawList } from '@/lib/votingStore';
 import { CheckCircle2, Vote, ChevronRight, Clock, Radio } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const DEBUG = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
 
 export default function VoterPage() {
   const { polls, deviceId, handleVote } = usePolls();
