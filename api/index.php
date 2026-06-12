@@ -40,11 +40,23 @@ function body() {
     return json_decode(file_get_contents('php://input'), true) ?: [];
 }
 
+function decodeOptions($raw) {
+    $v = $raw;
+    // Akár duplán kódolt JSON-t is feloldunk.
+    for ($i = 0; $i < 3 && is_string($v); $i++) {
+        $d = json_decode($v, true);
+        if ($d === null) break;
+        $v = $d;
+    }
+    if (is_array($v)) return array_values(array_map('strval', $v));
+    return [];
+}
+
 function rowToPoll($r) {
     return [
         'id'          => $r['id'],
         'question'    => $r['question'],
-        'options'     => json_decode($r['options'], true),
+        'options'     => decodeOptions($r['options']),
         'status'      => $r['status'],
         'votes'       => json_decode($r['votes'], true) ?: (object)[],
         'deviceVotes' => json_decode($r['device_votes'], true) ?: [],

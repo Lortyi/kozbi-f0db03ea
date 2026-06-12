@@ -55,15 +55,18 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
 
 // Biztonságos normalizálás: a szerverről érkező adat hibás/hiányos mezőit kijavítja,
 // így a felület nem omlik össze (fekete képernyő).
-function toOptionsArray(raw: unknown): string[] {
+function toOptionsArray(raw: unknown, depth = 0): string[] {
   if (Array.isArray(raw)) return raw.map(String);
-  // A szerver néha JSON-stringként adja vissza az options mezőt – ezt is kezeljük.
-  if (typeof raw === 'string') {
+  // A szerver néha JSON-stringként (akár duplán kódolva) adja vissza az options mezőt.
+  if (typeof raw === 'string' && depth < 3) {
+    const s = raw.trim();
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(String);
+      return toOptionsArray(JSON.parse(s), depth + 1);
     } catch {
-      /* nem JSON, marad üres */
+      // Nem JSON: ha tartalmaz elválasztót, próbáljuk felbontani.
+      if (s.includes(';')) return s.split(';').map(x => x.trim()).filter(Boolean);
+      if (s.includes(',')) return s.split(',').map(x => x.trim()).filter(Boolean);
+      return s ? [s] : [];
     }
   }
   // Objektumként ({0:"A",1:"B"}) érkező opciók kezelése.
@@ -75,10 +78,14 @@ function toOptionsArray(raw: unknown): string[] {
 
 function normalizePoll(p: unknown): Poll {
   const o = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
+  const options = toOptionsArray(o.options);
+  if (options.length === 0) {
+    console.warn('[AKB] A szavazás opciói üresek. Nyers options érték a szerverről:', o.options, '— teljes poll:', o);
+  }
   return {
     id: String(o.id ?? `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`),
     question: typeof o.question === 'string' ? o.question : '',
-    options: toOptionsArray(o.options),
+    options,
     status: o.status === 'closed' ? 'closed' : 'active',
     votes: o.votes && typeof o.votes === 'object' && !Array.isArray(o.votes)
       ? (o.votes as Record<string, number>)
