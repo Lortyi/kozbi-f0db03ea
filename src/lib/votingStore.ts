@@ -55,12 +55,30 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
 
 // Biztonságos normalizálás: a szerverről érkező adat hibás/hiányos mezőit kijavítja,
 // így a felület nem omlik össze (fekete képernyő).
+function toOptionsArray(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map(String);
+  // A szerver néha JSON-stringként adja vissza az options mezőt – ezt is kezeljük.
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map(String);
+    } catch {
+      /* nem JSON, marad üres */
+    }
+  }
+  // Objektumként ({0:"A",1:"B"}) érkező opciók kezelése.
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>).map(String);
+  }
+  return [];
+}
+
 function normalizePoll(p: unknown): Poll {
   const o = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
   return {
     id: String(o.id ?? `poll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`),
     question: typeof o.question === 'string' ? o.question : '',
-    options: Array.isArray(o.options) ? o.options.map(String) : [],
+    options: toOptionsArray(o.options),
     status: o.status === 'closed' ? 'closed' : 'active',
     votes: o.votes && typeof o.votes === 'object' && !Array.isArray(o.votes)
       ? (o.votes as Record<string, number>)
