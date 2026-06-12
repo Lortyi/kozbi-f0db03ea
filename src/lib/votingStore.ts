@@ -57,13 +57,16 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
 // így a felület nem omlik össze (fekete képernyő).
 function toOptionsArray(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.map(String);
-  // A szerver néha JSON-stringként adja vissza az options mezőt – ezt is kezeljük.
-  if (typeof raw === 'string') {
+  // A szerver néha JSON-stringként (akár duplán kódolva) adja vissza az options mezőt.
+  if (typeof raw === 'string' && depth < 3) {
+    const s = raw.trim();
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.map(String);
+      return toOptionsArray(JSON.parse(s), depth + 1);
     } catch {
-      /* nem JSON, marad üres */
+      // Nem JSON: ha tartalmaz elválasztót, próbáljuk felbontani.
+      if (s.includes(';')) return s.split(';').map(x => x.trim()).filter(Boolean);
+      if (s.includes(',')) return s.split(',').map(x => x.trim()).filter(Boolean);
+      return s ? [s] : [];
     }
   }
   // Objektumként ({0:"A",1:"B"}) érkező opciók kezelése.
