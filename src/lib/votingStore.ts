@@ -99,8 +99,16 @@ function normalizePolls(data: unknown): Poll[] {
   return Array.isArray(data) ? data.map(normalizePoll) : [];
 }
 
+// Hibakereséshez: a legutóbbi nyers szerverválasz (list).
+let lastRawList: unknown = null;
+export function getLastRawList(): unknown {
+  return lastRawList;
+}
+
 export async function getPolls(): Promise<Poll[]> {
-  return normalizePolls(await api<Poll[]>('list'));
+  const raw = await api<Poll[]>('list');
+  lastRawList = raw;
+  return normalizePolls(raw);
 }
 
 export async function createPoll(question: string, options: string[]): Promise<Poll[]> {
