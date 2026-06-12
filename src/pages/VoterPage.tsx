@@ -126,14 +126,7 @@ export default function VoterPage() {
           </>
         )}
 
-        {DEBUG && (
-          <div className="rounded-xl border border-destructive/50 bg-muted/30 p-4">
-            <p className="text-xs font-semibold text-destructive mb-2">DEBUG — Nyers szerverválasz (list):</p>
-            <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap break-all max-h-80 overflow-auto">
-              {JSON.stringify(getLastRawList(), null, 2) ?? 'Még nincs válasz a szervertől.'}
-            </pre>
-          </div>
-        )}
+
 
         <p className="text-center text-xs text-muted-foreground pt-4">
           Eszközazonosító: <span className="font-mono">{deviceId.slice(0, 16)}…</span>
