@@ -73,15 +73,24 @@ function decodeOptions($raw) {
     return [];
 }
 
+function rowValue($row, $name, $default = null) {
+    if (array_key_exists($name, $row)) return $row[$name];
+    $wanted = strtolower($name);
+    foreach ($row as $key => $value) {
+        if (strtolower((string)$key) === $wanted) return $value;
+    }
+    return $default;
+}
+
 function rowToPoll($r) {
     return [
-        'id'          => $r['id'],
-        'question'    => $r['question'],
-        'options'     => decodeOptions($r['options']),
-        'status'      => $r['status'],
-        'votes'       => json_decode($r['votes'], true) ?: (object)[],
-        'deviceVotes' => json_decode($r['device_votes'], true) ?: [],
-        'createdAt'   => (int)$r['created_at'],
+        'id'          => rowValue($r, 'id', ''),
+        'question'    => rowValue($r, 'question', ''),
+        'options'     => decodeOptions(rowValue($r, 'options', [])),
+        'status'      => rowValue($r, 'status', 'active') === 'closed' ? 'closed' : 'active',
+        'votes'       => json_decode(rowValue($r, 'votes', '{}'), true) ?: (object)[],
+        'deviceVotes' => json_decode(rowValue($r, 'device_votes', '[]'), true) ?: [],
+        'createdAt'   => (int)rowValue($r, 'created_at', 0),
     ];
 }
 
