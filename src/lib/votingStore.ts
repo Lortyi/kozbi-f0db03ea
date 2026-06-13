@@ -56,7 +56,19 @@ async function api<T>(action: string, body?: unknown): Promise<T> {
 // Biztonságos normalizálás: a szerverről érkező adat hibás/hiányos mezőit kijavítja,
 // így a felület nem omlik össze (fekete képernyő).
 function toOptionsArray(raw: unknown, depth = 0): string[] {
-  if (Array.isArray(raw)) return raw.map(String);
+  if (Array.isArray(raw)) {
+    return raw
+      .map(item => {
+        if (item && typeof item === 'object') {
+          const o = item as Record<string, unknown>;
+          return o.text ?? o.label ?? o.option ?? o.value ?? Object.values(o)[0] ?? '';
+        }
+        return item;
+      })
+      .map(String)
+      .map(x => x.trim())
+      .filter(Boolean);
+  }
   // A szerver néha JSON-stringként (akár duplán kódolva) adja vissza az options mezőt.
   if (typeof raw === 'string' && depth < 3) {
     const s = raw.trim();
@@ -71,7 +83,10 @@ function toOptionsArray(raw: unknown, depth = 0): string[] {
   }
   // Objektumként ({0:"A",1:"B"}) érkező opciók kezelése.
   if (raw && typeof raw === 'object') {
-    return Object.values(raw as Record<string, unknown>).map(String);
+    return Object.values(raw as Record<string, unknown>)
+      .flatMap(value => toOptionsArray(value, depth + 1))
+      .map(x => x.trim())
+      .filter(Boolean);
   }
   return [];
 }
