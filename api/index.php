@@ -42,13 +42,34 @@ function body() {
 
 function decodeOptions($raw) {
     $v = $raw;
-    // Akár duplán kódolt JSON-t is feloldunk.
+    // Akár többszörösen kódolt JSON-t is feloldunk.
     for ($i = 0; $i < 3 && is_string($v); $i++) {
+        $original = trim($v);
         $d = json_decode($v, true);
-        if ($d === null) break;
+        if ($d === null && json_last_error() !== JSON_ERROR_NONE) {
+            if (strpos($original, ';') !== false) {
+                return array_values(array_filter(array_map('trim', explode(';', $original)), 'strlen'));
+            }
+            if (strpos($original, ',') !== false) {
+                return array_values(array_filter(array_map('trim', explode(',', $original)), 'strlen'));
+            }
+            return $original !== '' ? [$original] : [];
+        }
         $v = $d;
     }
-    if (is_array($v)) return array_values(array_map('strval', $v));
+    if (is_array($v)) {
+        $out = [];
+        foreach (array_values($v) as $item) {
+            if (is_array($item)) {
+                $text = $item['text'] ?? $item['label'] ?? $item['option'] ?? $item['value'] ?? reset($item);
+                if (is_scalar($text)) $out[] = trim((string)$text);
+            } elseif (is_scalar($item)) {
+                $out[] = trim((string)$item);
+            }
+        }
+        return array_values(array_filter($out, 'strlen'));
+    }
+    if (is_scalar($v)) return trim((string)$v) !== '' ? [trim((string)$v)] : [];
     return [];
 }
 
